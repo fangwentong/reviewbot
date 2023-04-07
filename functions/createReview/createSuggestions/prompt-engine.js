@@ -3,10 +3,10 @@ import path from 'node:path'
 /* eslint-disable */
 function filterOnlyModified(files) {
   return files.map(file => ({
-    ...file,
-    modifiedLines: file.modifiedLines.filter(line => line.added)
+    ...file, modifiedLines: file.modifiedLines.filter(line => line.added)
   }))
 }
+
 /* eslint-enable */
 
 function filterAcceptedFiles(files) {
@@ -23,30 +23,41 @@ function groupByLineRange({ modifiedLines }) {
   const output = []
   let range = { start: 0, end: 0 }
   let diff = ''
-  for (let i = 0; i < modifiedLines.length; i++) {
-    const { lineNumber, line } = modifiedLines[i]
-    if (range.start === 0) {
+  for (const element of modifiedLines) {
+    const { lineNumber } = element
+    if (range.start === 0 && (element.added || element.deleted)) {
       range.start = lineNumber
       range.end = lineNumber
-      diff += line.trim()
     } else if (lineNumber === range.end + 1) {
       range.end = lineNumber
-      diff += line.trim()
     }
+    diff += formatLine(element)
   }
   output.push({ range, diff })
   return output
 }
 
+function formatLine(line) {
+  if (line.added) {
+    return `+${line.line}\n`
+  } else if (line.deleted) {
+    return `-${line.line}\n`
+  } else {
+    return ` ${line.line}\n`
+  }
+}
+
 function enhanceWithPromptContext(change) {
   const promptContext = `
-        You will take in a git diff, and tell the user what they could have improved (like a code review)
+        Act as a code reviewer of a Pull Request, 
+        you will take in a git diff, and tell the user what they could have improved (like a code review)
         based on analyzing the git diff in order to see whats changed.
-        The language in the snippet is JavaScript.
-        Feel free to provide any examples as markdown code snippets in your answer.
+        The language in the snippet is Python.
+        Feel free to provide any examples as markdown code snippets in your answer, use Chinese language.
   
-        ${change}
+${change}
       `
+  console.log('[reviewbot] - building prompt context', promptContext)
   return [
     {
       role: 'system',

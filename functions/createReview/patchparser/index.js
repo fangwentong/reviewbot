@@ -120,8 +120,13 @@ export function parseGitPatch(patch) {
           nB--
 
           fileData.modifiedLines.push({
-            added: false,
+            deleted: true,
             lineNumber: nA,
+            line: line.substr(1)
+          })
+        } else {
+          fileData.modifiedLines.push({
+            lineNumber: nB,
             line: line.substr(1)
           })
         }

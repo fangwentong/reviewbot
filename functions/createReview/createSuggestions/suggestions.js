@@ -9,7 +9,8 @@ async function callChatGPTService(payload) {
     body: JSON.stringify({
       model: 'gpt-3.5-turbo',
       messages: payload,
-      max_tokens: 512
+      max_tokens: 2048,
+      temperature: 0
     })
   })
   const body = await response.json()
