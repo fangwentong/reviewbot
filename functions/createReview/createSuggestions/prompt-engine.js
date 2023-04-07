@@ -47,7 +47,7 @@ function formatLine(line) {
   }
 }
 
-function enhanceWithPromptContext(change) {
+function enhanceWithPromptContext(fileType, change) {
   const promptContext = `
 Act as a code reviewer of a Pull Request, providing feedback on the code changes below. Do not introduce yourselves.
 As a code reviewer, your task is:
@@ -58,7 +58,7 @@ As a code reviewer, your task is:
 - Be as concise as possible
 - Assume positive intent
 
-You are provided with the code changes in a unidiff format, The language of the code is Python. 
+You are provided with the code changes in a unidiff format, The language of the code is ${fileType}. 
 Patch of the code change to review:
   
 ${change}
@@ -69,6 +69,17 @@ ${change}
     // {role: 'user', content: promptContext},
     { role: 'system', content: promptContext }
   ]
+}
+
+function getFileType(file) {
+  const ext = path.extname(file)
+  if (ext === '.js') {
+    return 'javascript'
+  } else if (ext === '.py') {
+    return 'python'
+  } else if (ext === '.ts') {
+    return 'typescript'
+  }
 }
 
 /**
@@ -85,7 +96,10 @@ function buildPrompt(messageContext) {
       fileName: file.afterName,
       changes: groupByLineRange(file).map(change => ({
         ...change,
-        prompt: enhanceWithPromptContext(change.rawDiff)
+        prompt: enhanceWithPromptContext(
+          getFileType(file.afterName),
+          change.rawDiff
+        )
       }))
     }
   })
