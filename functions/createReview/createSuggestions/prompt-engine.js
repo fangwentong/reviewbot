@@ -19,7 +19,7 @@ function filterAcceptedFiles(files) {
   return filteredFiles
 }
 
-function groupByLineRange({ modifiedLines }) {
+function groupByLineRange({ rawDiff, modifiedLines }) {
   const output = []
   let range = { start: 0, end: 0 }
   let diff = ''
@@ -33,7 +33,7 @@ function groupByLineRange({ modifiedLines }) {
     }
     diff += formatLine(element)
   }
-  output.push({ range, diff })
+  output.push({ range, diff, rawDiff: rawDiff })
   return output
 }
 
@@ -49,21 +49,25 @@ function formatLine(line) {
 
 function enhanceWithPromptContext(change) {
   const promptContext = `
-        Act as a code reviewer of a Pull Request, 
-        you will take in a git diff, and tell the user what they could have improved (like a code review)
-        based on analyzing the git diff in order to see whats changed.
-        The language in the snippet is Python.
-        Feel free to provide any examples as markdown code snippets in your answer, use Chinese language.
+Act as a code reviewer of a Pull Request, providing feedback on the code changes below. Do not introduce yourselves.
+As a code reviewer, your task is:
+- Review the code changes (diffs) in the patch and provide feedback.
+- If there are any bugs, highlight them.
+- Do not highlight minor issues and nitpicks.
+- Use numbered lists if you have multiple comments.
+- Be as concise as possible
+- Assume positive intent
+
+You are provided with the code changes in a unidiff format, The language of the code is Python. 
+Patch of the code change to review:
   
 ${change}
-      `
+`
   console.log('[reviewbot] - building prompt context', promptContext)
   return [
-    {
-      role: 'system',
-      content: `You are are a senior software engineer and an emphathetic code reviewer.`
-    },
-    { role: 'user', content: promptContext }
+    // {role: 'system', content: `You are a senior software engineer and an emphathetic code reviewer.`},
+    // {role: 'user', content: promptContext},
+    { role: 'system', content: promptContext }
   ]
 }
 
@@ -81,7 +85,7 @@ function buildPrompt(messageContext) {
       fileName: file.afterName,
       changes: groupByLineRange(file).map(change => ({
         ...change,
-        prompt: enhanceWithPromptContext(change.diff)
+        prompt: enhanceWithPromptContext(change.rawDiff)
       }))
     }
   })

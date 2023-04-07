@@ -54,6 +54,7 @@ export function parseGitPatch(patch) {
   }
 
   splitIntoParts(lines, 'diff --git').forEach(diff => {
+    const rawDiff = diff.join('\n')
     const fileNameLine = diff.shift()
 
     if (!fileNameLine) return
@@ -72,7 +73,8 @@ export function parseGitPatch(patch) {
       deleted: false,
       beforeName: a.trim(),
       afterName: b.trim(),
-      modifiedLines: []
+      modifiedLines: [],
+      rawDiff: rawDiff
     }
 
     parsedPatch.files.push(fileData)
