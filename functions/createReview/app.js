@@ -11,13 +11,15 @@ dotenv.config()
  */
 export default async function app(message) {
   console.log('[reviewbot] - createReview', message.data)
-
   const messageContext = JSON.parse(
     Buffer.from(message.data, 'base64').toString()
   )
+  await doReview(messageContext)
+}
 
+export async function doReview(messageContext) {
   console.log('[reviewbot] - creating suggestions', messageContext)
-  const filesWithSuggestions = await createSuggestions(messageContext.files)
+  const filesWithSuggestions = await createSuggestions(messageContext)
 
   const comments = filesWithSuggestions.map(f => ({
     path: f.filename,

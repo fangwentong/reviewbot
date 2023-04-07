@@ -1,5 +1,5 @@
-import { PubSub } from '@google-cloud/pubsub'
-import parseGitPatch from 'parse-git-patch'
+import { parseGitPatch } from '../createReview/patchparser/index.js'
+import { doReview } from '../createReview/app.js'
 
 /**
  * This is the main entrypoint to the Probot app
@@ -44,7 +44,7 @@ export default async app => {
         }
       })
 
-      const { files } = parseGitPatch.default(diff)
+      const { files } = parseGitPatch(diff)
 
       const { data: commits } = await context.octokit.pulls.listCommits({
         ...common,
@@ -79,6 +79,7 @@ export default async app => {
         installationId: context.payload.installation.id
       }
 
+      /*
       const pubsub = new PubSub({
         projectId: process.env.PROJECT_ID,
         apiEndpoint: process.env.PUBSUB_HOST
@@ -94,12 +95,14 @@ export default async app => {
       const messageId = await topic.publishMessage({ json: messageContext })
 
       console.log('[reviewbot] - ack author comment', messageId)
+       */
 
       await context.octokit.reactions.createForIssueComment({
         content: 'eyes',
         comment_id: context.payload.comment.id,
         ...common
       })
+      await doReview(messageContext)
     } catch (error) {
       console.error(error)
       console.error(`[reviewbot] - encountered an error - ${error.message}`)

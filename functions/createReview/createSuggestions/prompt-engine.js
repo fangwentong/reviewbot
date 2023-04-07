@@ -1,16 +1,20 @@
 import path from 'node:path'
 
+/* eslint-disable */
 function filterOnlyModified(files) {
   return files.map(file => ({
     ...file,
     modifiedLines: file.modifiedLines.filter(line => line.added)
   }))
 }
+/* eslint-enable */
 
 function filterAcceptedFiles(files) {
   const filteredFiles = files.filter(
     f =>
-      path.extname(f.afterName) === '.js' || path.extname(f.afterName) === '.ts'
+      path.extname(f.afterName) === '.js' ||
+      path.extname(f.afterName) === '.ts' ||
+      path.extname(f.afterName) === '.py'
   )
   return filteredFiles
 }
@@ -53,14 +57,15 @@ function enhanceWithPromptContext(change) {
 }
 
 /**
-  Builds prompts for each file in a given payload by filtering and grouping only modified lines.
-  @param {Object[]} payload - The payload containing the files to build prompts for.
-  @returns {Object[]} - An array of objects containing file names and an array of changes with prompts for each file.
-**/
-function buildPrompt(payload) {
+ Builds prompts for each file in a given payload by filtering and grouping only modified lines.
+ @param {Object} messageContext - The payload containing the files to build prompts for.
+ @returns {Object[]} - An array of objects containing file names and an array of changes with prompts for each file.
+ **/
+function buildPrompt(messageContext) {
+  const payload = messageContext.files
   const acceptedFiles = filterAcceptedFiles(payload)
-  const filesWithModifiedLines = filterOnlyModified(acceptedFiles)
-  const result = filesWithModifiedLines.map(file => {
+  // const filesWithModifiedLines = filterOnlyModified(acceptedFiles)
+  const result = acceptedFiles.map(file => {
     return {
       fileName: file.afterName,
       changes: groupByLineRange(file).map(change => ({
