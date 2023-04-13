@@ -1,6 +1,5 @@
 import * as dotenv from 'dotenv'
 import createSuggestions from './createSuggestions/index.js'
-import { findLinePositionInDiff } from '../utils.js'
 import getOctokit from './oktokit/index.js'
 
 dotenv.config()
@@ -11,21 +10,28 @@ dotenv.config()
  */
 export default async function app(message) {
   console.log('[reviewbot] - createReview', message.data)
-
   const messageContext = JSON.parse(
     Buffer.from(message.data, 'base64').toString()
   )
+  await doReview(messageContext)
+}
 
+export async function doReview(messageContext) {
   console.log('[reviewbot] - creating suggestions', messageContext)
-  const filesWithSuggestions = await createSuggestions(messageContext.files)
+  const filesWithSuggestions = await createSuggestions(messageContext)
 
   const comments = filesWithSuggestions.map(f => ({
     path: f.filename,
+    line: f.lineRange.end,
+    start_line:
+      f.lineRange.start < f.lineRange.end ? f.lineRange.start : undefined,
+    /*
     position: findLinePositionInDiff(
       messageContext.diff,
       f.filename,
       f.lineRange.start
     ),
+    */
     body: f.suggestions
   }))
 

@@ -2,6 +2,13 @@
  * Finds the position of a specific line in a git diff output.
  * The line position refers to the index of the line in the diff, considering only the lines within the file specified.
  *
+ * https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
+ *
+ * The position value equals the number of lines down from the first "@@" hunk header in the file you want to
+ * add a comment. The line just below the "@@" line is position 1, the next line is position 2, and so on.
+ * The position in the diff continues to increase through lines of whitespace and additional hunks until
+ * the beginning of a new file.
+ *
  * @param {string} diff - The git diff output as a string.
  * @param {string} filename - The name of the file to search for the line number.
  * @param {number} lineNumber - The line number to find in the specified file.
@@ -44,10 +51,6 @@ const findLinePositionInDiff = (diff, filename, lineNumber) => {
       } else if (line.startsWith('-')) {
         position++
       }
-    }
-
-    if (line.startsWith('@@') && inHunk) {
-      position++
     }
   }
 

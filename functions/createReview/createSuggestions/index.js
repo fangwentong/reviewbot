@@ -3,12 +3,12 @@ import generateSuggestions from './suggestions.js'
 
 /**
   Creates suggestions for each file in a git diff using the ChatGPT transformer API.
-  @param {Object[]} gitDiff - The git diff object containing changes & metadata for each file.
+  @param {Object[]} messageContext - The git diff object containing changes & metadata for each file.
   @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing suggestions for each file.
   @throws {Error} If an error occurs while creating suggestions.
  */
-async function createSuggestions(gitDiff) {
-  const prompts = buildPrompt(gitDiff)
+async function createSuggestions(messageContext) {
+  const prompts = buildPrompt(messageContext)
   const response = await Promise.all(
     prompts.map(async file => {
       let suggestionsForFile = {}
