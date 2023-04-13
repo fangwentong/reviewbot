@@ -1,6 +1,5 @@
 import * as dotenv from 'dotenv'
 import createSuggestions from './createSuggestions/index.js'
-import { findLinePositionInDiff } from '../utils.js'
 import getOctokit from './oktokit/index.js'
 
 dotenv.config()
@@ -23,11 +22,16 @@ export async function doReview(messageContext) {
 
   const comments = filesWithSuggestions.map(f => ({
     path: f.filename,
+    line: f.lineRange.end,
+    start_line:
+      f.lineRange.start < f.lineRange.end ? f.lineRange.start : undefined,
+    /*
     position: findLinePositionInDiff(
       messageContext.diff,
       f.filename,
       f.lineRange.start
     ),
+    */
     body: f.suggestions
   }))
 
