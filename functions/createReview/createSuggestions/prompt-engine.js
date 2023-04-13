@@ -4,18 +4,20 @@ import path from 'node:path'
 function filterOnlyModified(files) {
   return files.map(file => ({
     ...file, modifiedLines: file.modifiedLines.filter(line => line.added)
-  }))
+  }));
 }
 
 /* eslint-enable */
 
 function filterAcceptedFiles(files) {
-  const filteredFiles = files.filter(
-    f =>
-      path.extname(f.afterName) === '.js' ||
-      path.extname(f.afterName) === '.ts' ||
-      path.extname(f.afterName) === '.py'
-  )
+  const filteredFiles = files
+    .filter(
+      f =>
+        path.extname(f.afterName) === '.js' ||
+        path.extname(f.afterName) === '.ts' ||
+        path.extname(f.afterName) === '.py'
+    )
+    .filter(f => f.modifiedLines.length > 0)
   return filteredFiles
 }
 

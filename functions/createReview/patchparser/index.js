@@ -2,7 +2,7 @@ const hashRegex = /^From (\S*)/
 const authorRegex = /^From:\s?([^<].*[^>])?\s+(<(.*)>)?/
 const fileNameRegex = /^diff --git "?a\/(.*)"?\s*"?b\/(.*)"?/
 const fileLinesRegex = /^@@ -([0-9]*),?\S* \+([0-9]*),?/
-const similarityIndexRegex = /^similarity index /
+const similarityIndexRegex = /^similarity index 100%/
 const addedFileModeRegex = /^new file mode /
 const deletedFileModeRegex = /^deleted file mode /
 
@@ -104,26 +104,19 @@ export function parseGitPatch(patch) {
       let nB = parseInt(b)
 
       lines.forEach(line => {
-        nA++
-        nB++
-
         if (line.startsWith('-- ')) {
           return
         }
         if (line.startsWith('+')) {
-          nA--
-
           fileData.modifiedLines.push({
             added: true,
-            lineNumber: nB,
+            lineNumber: nB++,
             line: line.substr(1)
           })
         } else if (line.startsWith('-')) {
-          nB--
-
           fileData.modifiedLines.push({
             deleted: true,
-            lineNumber: nA,
+            lineNumber: nA++,
             line: line.substr(1)
           })
         } else {
@@ -131,6 +124,8 @@ export function parseGitPatch(patch) {
             lineNumber: nB,
             line: line.substr(1)
           })
+          nA++
+          nB++
         }
       })
     })
