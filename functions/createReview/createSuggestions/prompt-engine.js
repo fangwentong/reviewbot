@@ -7,18 +7,43 @@ function filterOnlyModified(files) {
   }));
 }
 
+const fileTypes = {
+  '.js': 'javascript',
+  '.ts': 'typescript',
+  '.py': 'python',
+  '.java': 'java',
+  '.go': 'go',
+  '.rb': 'ruby',
+  '.php': 'php',
+  '.cs': 'csharp',
+  '.cpp': 'cpp',
+  '.cc': 'cpp',
+  '.cxx': 'cpp',
+  '.c': 'c',
+  '.h': 'c',
+  '.m': 'objective-c',
+  '.mm': 'objective-c',
+  '.swift': 'swift',
+  '.proto': 'protobuf',
+  '.json': 'json',
+  '.yaml': 'yaml',
+  '.yml': 'yaml',
+  '.html': 'html',
+  '.htm': 'html',
+  '.css': 'css',
+  '.scss': 'scss',
+  '.less': 'less',
+  '.md': 'markdown',
+  '.markdown': 'markdown',
+  '.sh': 'shell'
+};
+
 /* eslint-enable */
 
 function filterAcceptedFiles(files) {
-  const filteredFiles = files
-    .filter(
-      f =>
-        path.extname(f.afterName) === '.js' ||
-        path.extname(f.afterName) === '.ts' ||
-        path.extname(f.afterName) === '.py'
-    )
+  return files
+    .filter(f => path.extname(f.afterName) in fileTypes)
     .filter(f => f.modifiedLines.length > 0)
-  return filteredFiles
 }
 
 function groupByLineRange({ rawDiff, modifiedLines }) {
@@ -49,11 +74,24 @@ function formatLine(line) {
   }
 }
 
+/**
+ * build prompt for a code review, based on the Google Eng Practices:
+ * https://google.github.io/eng-practices/review/
+ *
+ * @param fileType
+ * @param change
+ * @returns {[{role: string, content: string}]}
+ */
 function enhanceWithPromptContext(fileType, change) {
   const promptContext = `
 Act as a code reviewer of a Pull Request, providing feedback on the code changes below. Do not introduce yourselves.
 As a code reviewer, your task is:
-- Review the code changes (diffs) in the patch and provide feedback.
+- Review the code changes (diffs) in the patch and provide feedback, including:
+  - Design: Is the code well-designed and appropriate for your system?
+  - Functionality: Does the code behave as the author likely intended? Is the way the code behaves good for its users?
+  - Complexity: Could the code be made simpler? Would another developer be able to easily understand and use this code when they come across it in the future?
+  - Naming: Did the developer choose clear names for variables, classes, methods, etc.?
+  - Documentation: Did the developer also update relevant documentation?
 - If there are any bugs, highlight them.
 - Do not highlight minor issues and nitpicks.
 - Use numbered lists if you have multiple comments.
@@ -62,7 +100,7 @@ As a code reviewer, your task is:
 
 You are provided with the code changes in a unidiff format, The language of the code is ${fileType}. 
 Patch of the code change to review:
-  
+
 ${change}
 `
   console.log('[reviewbot] - building prompt context', promptContext)
@@ -74,14 +112,7 @@ ${change}
 }
 
 function getFileType(file) {
-  const ext = path.extname(file)
-  if (ext === '.js') {
-    return 'javascript'
-  } else if (ext === '.py') {
-    return 'python'
-  } else if (ext === '.ts') {
-    return 'typescript'
-  }
+  return fileTypes[path.extname(file)]
 }
 
 /**
